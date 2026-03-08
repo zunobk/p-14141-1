@@ -50,6 +50,7 @@ logging:
 custom:
   site:
     backUrl: 'http://localhost:${server.port}'
+  systemMemberApiKey: "${CUSTOM__SYSTEM_MEMBER_API_KEY:system}"
   jwt:
     secretKey: "${CUSTOM__JWT__SECRET_KEY:12345678901234567890123456789012}"
   accessToken:

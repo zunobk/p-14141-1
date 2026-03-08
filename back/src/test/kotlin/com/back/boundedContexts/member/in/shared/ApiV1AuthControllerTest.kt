@@ -173,8 +173,6 @@ class ApiV1AuthControllerTest {
         mvc.get("/member/api/v1/auth/me")
             .andExpect {
                 status { isUnauthorized() }
-                match(handler().handlerType(ApiV1AuthController::class.java))
-                match(handler().methodName("me"))
                 jsonPath("$.resultCode") { value("401-1") }
                 jsonPath("$.msg") { value("로그인 후 이용해주세요.") }
             }
@@ -186,8 +184,6 @@ class ApiV1AuthControllerTest {
             header(HttpHeaders.AUTHORIZATION, "key")
         }.andExpect {
             status { isUnauthorized() }
-            match(handler().handlerType(ApiV1AuthController::class.java))
-            match(handler().methodName("me"))
             jsonPath("$.resultCode") { value("401-2") }
             jsonPath("$.msg") { value("Authorization 헤더가 Bearer 형식이 아닙니다.") }
         }

@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithUserDetails
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
@@ -53,6 +54,7 @@ class ApiV1MemberControllerTest {
     }
 
     @Test
+    @WithUserDetails("user1")
     fun `랜덤 보안 팁 조회는 보안 안내 문구를 반환한다`() {
         mvc.get("/member/api/v1/members/randomSecureTip")
             .andExpect {
@@ -63,6 +65,16 @@ class ApiV1MemberControllerTest {
                 content {
                     string("비밀번호는 영문, 숫자, 특수문자를 조합하여 8자 이상으로 설정하세요.")
                 }
+            }
+    }
+
+    @Test
+    fun `랜덤 보안 팁 조회에서 미인증 사용자는 401을 반환한다`() {
+        mvc.get("/member/api/v1/members/randomSecureTip")
+            .andExpect {
+                status { isUnauthorized() }
+                jsonPath("$.resultCode") { value("401-1") }
+                jsonPath("$.msg") { value("로그인 후 이용해주세요.") }
             }
     }
 
