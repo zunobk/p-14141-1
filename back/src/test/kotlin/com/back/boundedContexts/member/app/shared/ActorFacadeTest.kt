@@ -1,8 +1,10 @@
 package com.back.boundedContexts.member.app.shared
 
 import com.back.boundedContexts.member.dto.shared.AccessTokenPayload
+import com.back.global.security.domain.SecurityUser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -63,5 +65,22 @@ class ActorFacadeTest {
         val reference = actorFacade.getReferenceById(user1.id)
 
         assertThat(reference.id).isEqualTo(user1.id)
+    }
+
+    @Test
+    fun `SecurityUser 로부터 회원을 조회할 수 있다`() {
+        val user1 = actorFacade.findByUsername("user1")!!
+        val securityUser = SecurityUser(
+            id = user1.id,
+            username = user1.username,
+            password = user1.password ?: "",
+            nickname = user1.nickname,
+            authorities = listOf(SimpleGrantedAuthority("ROLE_USER")),
+        )
+
+        val member = actorFacade.memberOf(securityUser)
+
+        assertThat(member.id).isEqualTo(user1.id)
+        assertThat(member.username).isEqualTo(user1.username)
     }
 }

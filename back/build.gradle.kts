@@ -36,6 +36,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
+    implementation("org.springframework.security:spring-security-core")
 
     // QueryDSL
     implementation("io.github.openfeign.querydsl:querydsl-jpa:7.1") {
