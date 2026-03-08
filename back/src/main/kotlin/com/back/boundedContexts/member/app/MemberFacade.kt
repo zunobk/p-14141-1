@@ -42,6 +42,13 @@ class MemberFacade(
     fun findById(id: Int): Optional<Member> = memberRepository.findById(id)
 
     @Transactional(readOnly = true)
+    fun checkPassword(member: Member, rawPassword: String) {
+        if (member.password != rawPassword) {
+            throw AppException("401-1", "비밀번호가 일치하지 않습니다.")
+        }
+    }
+
+    @Transactional(readOnly = true)
     fun findPagedByKw(
         kw: String,
         sort: MemberSearchSortType1,
