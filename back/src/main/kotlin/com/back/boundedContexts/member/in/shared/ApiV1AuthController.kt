@@ -6,12 +6,13 @@ import com.back.boundedContexts.member.dto.MemberDto
 import com.back.boundedContexts.member.dto.MemberWithUsernameDto
 import com.back.global.exception.app.AppException
 import com.back.global.rsData.RsData
-import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import org.springframework.http.HttpHeaders
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -96,14 +97,44 @@ class ApiV1AuthController(
     @Transactional(readOnly = true)
     fun me(
         request: HttpServletRequest,
+        response: HttpServletResponse,
     ): MemberWithUsernameDto {
-        val apiKey = request.cookies
+        request.cookies
             ?.firstOrNull { it.name == "apiKey" }
             ?.value
+            ?.let(memberFacade::findByApiKey)
+            ?.let(::MemberWithUsernameDto)
+            ?.let { return it }
+
+        val authorization = request.getHeader(HttpHeaders.AUTHORIZATION)
+            ?: throw AppException("401-1", "로그인 후 이용해주세요.")
+
+        if (!authorization.startsWith("Bearer ")) {
+            throw AppException("401-2", "Authorization 헤더가 Bearer 형식이 아닙니다.")
+        }
+
+        val tokens = authorization.removePrefix("Bearer ").trim()
+            .split(Regex("\\s+"), limit = 2)
+
+        val apiKey = tokens.firstOrNull()
+            ?.takeIf { it.isNotBlank() }
             ?: throw AppException("401-1", "로그인 후 이용해주세요.")
 
         val member = memberFacade.findByApiKey(apiKey)
             ?: throw AppException("401-1", "로그인 후 이용해주세요.")
+
+        val accessToken = tokens.getOrNull(1)
+        val payload = accessToken?.let(authTokenService::payload)
+
+        if (payload == null || payload.id != member.id || payload.username != member.username || payload.name != member.nickname) {
+            val newAccessToken = authTokenService.genAccessToken(member)
+
+            response.addCookie(Cookie("accessToken", newAccessToken).apply {
+                path = "/"
+                isHttpOnly = true
+            })
+            response.setHeader(HttpHeaders.AUTHORIZATION, newAccessToken)
+        }
 
         return MemberWithUsernameDto(member)
     }

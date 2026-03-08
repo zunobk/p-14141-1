@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
@@ -155,6 +156,7 @@ class ApiV1AuthControllerTest {
             jsonPath("$.modifiedAt") { value(startsWith(member.modifiedAt.toString().take(20))) }
             jsonPath("$.username") { value(member.username) }
             jsonPath("$.nickname") { value(member.nickname) }
+            jsonPath("$.profileImageUrl") { value(member.profileImgUrlOrDefault) }
         }
     }
 
@@ -168,5 +170,47 @@ class ApiV1AuthControllerTest {
                 jsonPath("$.resultCode") { value("401-1") }
                 jsonPath("$.msg") { value("로그인 후 이용해주세요.") }
             }
+    }
+
+    @Test
+    fun `내 정보 조회에서 Authorization 헤더가 Bearer 형식이 아니면 401을 반환한다`() {
+        mvc.get("/member/api/v1/auth/me") {
+            header(HttpHeaders.AUTHORIZATION, "key")
+        }.andExpect {
+            status { isUnauthorized() }
+            match(handler().handlerType(ApiV1AuthController::class.java))
+            match(handler().methodName("me"))
+            jsonPath("$.resultCode") { value("401-2") }
+            jsonPath("$.msg") { value("Authorization 헤더가 Bearer 형식이 아닙니다.") }
+        }
+    }
+
+    @Test
+    fun `내 정보 조회에서 Authorization 헤더의 accessToken 이 잘못되어도 apiKey 가 유효하면 accessToken 을 재발급한다`() {
+        val member = memberFacade.findByUsername("user1")!!
+
+        val resultActions = mvc.get("/member/api/v1/auth/me") {
+            header(HttpHeaders.AUTHORIZATION, "Bearer ${member.apiKey} wrong-access-token")
+        }.andExpect {
+            status { isOk() }
+            match(handler().handlerType(ApiV1AuthController::class.java))
+            match(handler().methodName("me"))
+            jsonPath("$.id") { value(member.id) }
+            jsonPath("$.createdAt") { value(startsWith(member.createdAt.toString().take(20))) }
+            jsonPath("$.modifiedAt") { value(startsWith(member.modifiedAt.toString().take(20))) }
+            jsonPath("$.username") { value(member.username) }
+            jsonPath("$.nickname") { value(member.nickname) }
+            jsonPath("$.profileImageUrl") { value(member.profileImgUrlOrDefault) }
+        }
+
+        val result = resultActions.andReturn()
+        val accessTokenCookie = result.response.getCookie("accessToken")
+
+        assertThat(accessTokenCookie).isNotNull
+        assertThat(accessTokenCookie!!.value).isNotBlank()
+        assertThat(accessTokenCookie.path).isEqualTo("/")
+        assertThat(accessTokenCookie.isHttpOnly).isTrue
+        assertThat(result.response.getHeader(HttpHeaders.AUTHORIZATION))
+            .isEqualTo(accessTokenCookie.value)
     }
 }
