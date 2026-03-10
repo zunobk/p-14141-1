@@ -111,7 +111,7 @@ custom:
     redisHost: localhost
     redisDatabase: 1
   prod:
-    cookieDomain: shop.zunobk.site
+    cookieDomain: market.zunobk.site
     frontUrl: "https://www.${custom.prod.cookieDomain}"
     backUrl: "https://api.${custom.prod.cookieDomain}"
     dbHost: pg_1
