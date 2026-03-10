@@ -93,7 +93,7 @@ logging:
     org.hibernate.orm.jdbc.batch: TRACE
     org.springframework.transaction.interceptor: TRACE
 custom:
-  dbBaseName: blog
+  dbBaseName: market
   dev:
     cookieDomain: localhost
     frontUrl: "http://${custom.dev.cookieDomain}:3000"
