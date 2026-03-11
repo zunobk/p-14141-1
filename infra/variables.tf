@@ -5,10 +5,10 @@ variable "region" {
 
 variable "prefix" {
   description = "Prefix for all resources"
-  default     = "mall"
+  default     = "mall2"
 }
 
 variable "app_1_domain" {
   description = "app_1 domain"
-  default     = "api.mall.zunobk.site"
+  default     = "api.mall2.zunobk.site"
 }
