@@ -17,7 +17,7 @@ class HomeController {
         val localHost = InetAddress.getLocalHost()
 
         return """
-            |<h1>API 서버!@</h1>
+            |<h1>API 서버!!@</h1>
             |<p>Host Name: ${localHost.hostName}</p>
             |<p>Host Address: ${localHost.hostAddress}</p>
             |<div>
